@@ -34,7 +34,7 @@ module.exports = app;  // ให้ Vercel ใช้งาน API ได้
 const db = mysql.createConnection({
     host: process.env.DB_HOST || 'gateway01.ap-southeast-1.prod.aws.tidbcloud.com',
     user: process.env.DB_USER || '4KhA7MfZkdHo6df.root',
-    password: process.env.DB_PASS || 'uNVdGaM9324l3SLH',
+    password: process.env.DB_PASS || 'QZxt5AxGwZsfXCGA',
     database: process.env.DB_NAME || 'fit_buddy',
     ssl: { rejectUnauthorized: true }  // รองรับ TiDB Cloud SSL
 });
@@ -48,7 +48,9 @@ db.connect((err) => {
 });
 
 
-
+app.get("/", (req, res) => {
+    res.send("API is working!");
+});
 // API endpoint to get user profile data by user_id
 app.get('/api/profile/:user_id', (req, res) => {
     const userId = req.params.user_id;
