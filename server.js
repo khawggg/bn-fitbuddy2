@@ -6,6 +6,8 @@ const path = require('path');
 const cors = require('cors');
 const bcrypt = require('bcrypt');
 const hostname = '127.0.0.1';
+const fs = require('fs');
+
 require('dotenv').config();
 
 
@@ -21,7 +23,9 @@ app.listen(port, hostname, () => {
     console.log(`Server running at http://${hostname}:${port}/`);
 });
 
-
+// ใช้ production environment SSL หรือใช้ไฟล์ตาม path
+const sslCert = process.env.SSL_CERT || fs.readFileSync(path.join(__dirname, 'isrgrootx1.pem'));
+   
 // MySQL Connection
 const db = mysql.createConnection({
     host: process.env.DB_HOST || 'gateway01.ap-southeast-1.prod.aws.tidbcloud.com',
@@ -32,6 +36,33 @@ const db = mysql.createConnection({
     
 });
 
+// เชื่อมต่อกับ MySQL และจัดการข้อผิดพลาด
+function connectToDatabase() {
+    if (!connection) {
+        console.error('No database connection available');
+        return;
+    }
+   
+    connection.connect((err) => {
+        if (err) {
+            console.error('Error connecting to MySQL:', err.stack);
+            // ลองเชื่อมต่อใหม่หลังจาก delay
+            setTimeout(connectToDatabase, 5000);
+            return;
+        }
+        console.log('Connected to MySQL as id ' + connection.threadId);
+    });
+   
+    // จัดการการเชื่อมต่อที่หลุด
+    connection.on('error', (err) => {
+        console.error('Database connection error:', err);
+        if (err.code === 'PROTOCOL_CONNECTION_LOST') {
+            connectToDatabase();
+        } else {
+            throw err;
+        }
+    });
+}
 
 db.connect((err) => {
     if (err) {
